@@ -16,13 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredTasks.forEach((task, index) => {
             const li = document.createElement('li');
-            li.className = task.completed ? 'completed' : '';
+            li.className = `list-group-item d-flex justify-content-between align-items-center ${task.completed ? 'list-group-item-success' : ''}`;
             li.innerHTML = `
-                <span>${task.text}</span>
-                <div class="task-actions">
-                    <button onclick="toggleTask(${index})">${task.completed ? 'Undo' : 'Complete'}</button>
-                    <button onclick="editTask(${index})">Edit</button>
-                    <button onclick="deleteTask(${index})">Delete</button>
+                <span class="task-text ${task.completed ? 'text-decoration-line-through' : ''}">${task.text}</span>
+                <div>
+                    <button class="btn btn-sm btn-${task.completed ? 'secondary' : 'success'} me-1 toggle-task-btn" data-index="${index}">${task.completed ? 'Undo' : 'Complete'}</button>
+                    <button class="btn btn-sm btn-warning me-1 edit-task-btn" data-index="${index}">Edit</button>
+                    <button class="btn btn-sm btn-danger delete-task-btn" data-index="${index}">Delete</button>
                 </div>
             `;
             taskList.appendChild(li);
@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
             taskInput.value = '';
             saveTasks();
             renderTasks();
+        } else {
+            alert('Task cannot be empty!');
         }
     };
 
@@ -51,30 +53,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const editTask = (index) => {
         const newTaskText = prompt('Edit your task:', tasks[index].text);
-        if (newTaskText !== null) {
+        if (newTaskText !== null && newTaskText.trim() !== '') {
             tasks[index].text = newTaskText.trim();
+            saveTasks();
+            renderTasks();
+        } else {
+            alert('Task cannot be empty!');
+        }
+    };
+
+    const deleteTask = (index) => {
+        if (confirm('Are you sure you want to delete this task?')) {
+            tasks.splice(index, 1);
             saveTasks();
             renderTasks();
         }
     };
 
-    const deleteTask = (index) => {
-        tasks.splice(index, 1);
-        saveTasks();
-        renderTasks();
-    };
-
-    // Attach functions to the window object
-    window.toggleTask = toggleTask;
-    window.editTask = editTask;
-    window.deleteTask = deleteTask;
+    taskList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('toggle-task-btn')) {
+            const index = e.target.dataset.index;
+            toggleTask(index);
+        } else if (e.target.classList.contains('edit-task-btn')) {
+            const index = e.target.dataset.index;
+            editTask(index);
+        } else if (e.target.classList.contains('delete-task-btn')) {
+            const index = e.target.dataset.index;
+            deleteTask(index);
+        }
+    });
 
     addTaskBtn.addEventListener('click', addTask);
+
+    taskInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addTask();
+        }
+    });
 
     filterButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             const filter = e.target.dataset.filter;
             renderTasks(filter);
+
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
         });
     });
 
